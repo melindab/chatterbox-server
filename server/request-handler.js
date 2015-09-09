@@ -11,6 +11,9 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var utils = require('./utils');
+
+
 module.exports = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -27,39 +30,41 @@ module.exports = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log("Serving request type " + request.method + " for url " + request.url);
-//console.log(request);
-//   request({
-//     url: '127.0.0.1:3000/classes/messages', //URL to hit
-//     qs: {from: 'blog example', time: +new Date()}, //Query string data
-//     method: 'GET', //Specify the method
-//     headers: { //We can define headers too
-//         'Content-Type': 'MyContentType',
-//         'Custom-Header': 'Custom Value'
-//     }
-// }, function(error, response, body){
-//     if(error) {
-//         console.log(error);
-//     } else {
-//         console.log(response.statusCode, body);
-//     }
-// });
-
+  //console.log(request);
+  //   request({
+  //     url: '127.0.0.1:3000/classes/messages', //URL to hit
+  //     qs: {from: 'blog example', time: +new Date()}, //Query string data
+  //     method: 'GET', //Specify the method
+  //     headers: { //We can define headers too
+  //         'Content-Type': 'MyContentType',
+  //         'Custom-Header': 'Custom Value'
+  //     }
+  // }, function(error, response, body){
+  //     if(error) {
+  //         console.log(error);
+  //     } else {
+  //         console.log(response.statusCode, body);
+  //     }
+  // });
+  // var data = {
+  //   results: []
+  // };
 
   // The outgoing status.
-  var statusCode = 200;
+  
 
   // See the note below about CORS headers.
-  var headers = defaultCorsHeaders;
+  
 
   // Tell the client we are sending them plain text.
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = "text/plain";
+  
+  // check back here to see if this has an effect later
 
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
 
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
@@ -68,7 +73,25 @@ module.exports = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end("Hello, World!");
+  
+ 
+  if (request.method === 'POST') {
+    //response.end(JSON.stringify(data));
+    console.log(request.method);
+    utils.handlePost(request, function(message) {
+      utils.messages.push(message);
+      message.objectId = ++utils.objectId;
+      utils.sendResponse(response, {objectId: 1}, 201);
+    });
+  } else if (request.method === 'GET') {
+      utils.sendResponse(response, {results: utils.messages});
+  } else if (request.method === 'OPTIONS') {
+      utils.sendResponse(response, null);
+  } 
+  //else {
+  //  sendResponse(response, "Not found", 404);
+  // }
+
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
@@ -81,9 +104,4 @@ module.exports = function(request, response) {
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
 
-  var defaultCorsHeaders = {
-    "access-control-allow-origin": "*",
-    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "access-control-allow-headers": "content-type, accept",
-    "access-control-max-age": 10 // Seconds.
-  };
+

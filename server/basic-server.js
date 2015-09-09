@@ -1,7 +1,8 @@
 /* Import node's http module: */
 var http = require("http");
 var handleRequest = require('./request-handler.js');
-var request = require('request');
+var urlParser = require('url');
+var utils = require('./utils');
 console.log(handleRequest);
 
 // Every server needs to listen on a port with a unique number. The
@@ -16,6 +17,12 @@ var port = 3000;
 // special address that always refers to localhost.
 var ip = "127.0.0.1";
 
+var routes = {
+  '/classes/chatterbox': handleRequest,
+  '/classes/messages': handleRequest,
+  '/classes/room': handleRequest,
+  '/classes/room1': handleRequest
+};
 
 
 // We use node's http module to create a server.
@@ -24,7 +31,15 @@ var ip = "127.0.0.1";
 // incoming requests.
 //
 // After creating the server, we will tell it to listen on the given port and IP. */
-var server = http.createServer(handleRequest);
+var server = http.createServer(function(request, response) {
+  var parts = urlParser.parse(request.url);
+  var route = routes[parts.pathname];
+  if (route) {
+    route(request, response);
+  } else {
+    utils.sendResponse(response, 'Not Found', 404);
+  }
+});
 console.log("Listening on http://" + ip + ":" + port);
 server.listen(port, ip);
 
